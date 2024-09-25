@@ -6,6 +6,7 @@
     "users": [
       {
         "name": "core",
+        "passwordHash": "admin",
         "sshAuthorizedKeys": [
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFhesNeQ0BSdc/hrk7g1kR1kp/BQZfZDtDM8S+OJCNPK tharaka@fedora"
         ]
@@ -14,14 +15,6 @@
   },
   "storage": {
     "files": [
-      {
-        "path": "/etc/hostname",
-        "contents": {
-          "compression": "",
-          "source": "data:,tutorial%0A"
-        },
-        "mode": 420
-      },
       {
         "path": "/etc/profile.d/systemd-pager.sh",
         "contents": {
