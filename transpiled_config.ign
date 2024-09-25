@@ -7,7 +7,7 @@
       {
         "name": "core",
         "sshAuthorizedKeys": [
-          "ssh-rsa ABCD"
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAS92q1lG7tCjO+rJHM74ySeddZRahWfSq/Q7ol+0q2o"
         ]
       }
     ]
