@@ -1,14 +1,13 @@
 {
   "ignition": {
-    "version": "3.3.0"
+    "version": "3.4.0"
   },
   "passwd": {
     "users": [
       {
-        "name": "tharaka",
-        "passwordHash": "admin",
+        "name": "core",
         "sshAuthorizedKeys": [
-          "THARAKA"
+          "ABCDEFGH"
         ]
       }
     ]
