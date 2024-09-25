@@ -11,5 +11,51 @@
         ]
       }
     ]
+  },
+  "storage": {
+    "files": [
+      {
+        "path": "/etc/hostname",
+        "contents": {
+          "compression": "",
+          "source": "data:,tutorial%0A"
+        },
+        "mode": 420
+      },
+      {
+        "path": "/etc/profile.d/systemd-pager.sh",
+        "contents": {
+          "compression": "",
+          "source": "data:,%23%20Tell%20systemd%20to%20not%20use%20a%20pager%20when%20printing%20information%0Aexport%20SYSTEMD_PAGER%3Dcat%0A"
+        },
+        "mode": 420
+      },
+      {
+        "path": "/etc/containers/systemd/etcd-member.container",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/4ySz04CMRDG732KvkC3gAd0kx78d+DCwUQ9IIdxd4SJs1Nspypvb1gQEgPBHppJvv6+rzOZ2aOQzs0d5ibRSilKeChiwWaSBaOV2KJFbVpz/aaYgqB+xfTuojAJVgppgWqeQTSf0MzsNooCCaa52ZdT6DD0vpMOFhg+Cqwrir6JCWP2G6VmUMxqplvbsIxZzVPksiNdCwq135fm/hub4EtOnmMD7F9JetWeOS9mczsn0G0bHlrXO7qWkj0EnCZJSAnYQfuJSSmjWyEmVxJnu1Rd1d4PR+NqUA2qYT26uBzsSaasKGefH8k8ZDVMKHoSH1/9IXeZ/8WO9NlwyYppO6xw9MvGzCaSFZjn/Xpge7MOXWElVzKm3+34CQAA///memhLgAIAAA=="
+        },
+        "mode": 420
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "dropins": [
+          {
+            "contents": "[Service]\n# Override Execstart in main unit\nExecStart=\n# Add new Execstart with `-` prefix to ignore failure\nExecStart=-/usr/sbin/agetty --autologin core --noclear %I $TERM\nTTYVTDisallocate=no\n",
+            "name": "autologin-core.conf"
+          }
+        ],
+        "name": "serial-getty@ttyS0.service"
+      },
+      {
+        "contents": "[Service]\nType=oneshot\nExecStart=/usr/bin/false\nRemainAfterExit=yes\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "failure.service"
+      }
+    ]
   }
 }
