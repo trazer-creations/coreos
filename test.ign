@@ -1,0 +1,47 @@
+{
+  "ignition": {
+    "version": "3.4.0"
+  },
+  "passwd": {
+    "users": [
+      {
+        "groups": [
+          "wheel",
+          "docker"
+        ],
+        "name": "core",
+        "passwordHash": "admin",
+        "sshAuthorizedKeys": [
+          "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCqJDySF3I+nTrgBVNAnjYwf8taj8NjJcwpQ6mnntQW6mMLQXDbpZ+e6JbDjMeousvZItQwO2oOddV9jZEqfrJPdIjsW1nS4ZYQatkAdru0xVMTp/pM4vxJy1eD6ani6l7isANWo9oWdZBwgXEjOXmzxJFTB/oos06ka5zVUBGuFLGtwlS0D0bwKMhUHQAH4NHjVt5v2u5aWZ7yUkD8sBQ/hRiK2FI34z/xV49ZvBw8Ik2IwVdEDmPKmmAgf0/t8dyCDMBdzxD2AkFK/V1UPqyRM2LleCELYFd0MYykcJP2QMwOLFKYzTA/tJ3weWse/ZbgEdUM3ok53t+z7YdGWjkwPf9pU7frFq46s5Z/wsRBjoMs1g2zGIB0f82PPwnX2K4zYgOzryid5y810QBeYfN5uMvjB7BoMn5ZR14aUQdvp/oOqo3dEEeS25pz+LhDrNz2rJ9rDjusL2sbE+iezx3meOSa1gZv9bTeYSXDZocXDrvQWVEnKCBmbh1IEug5qgU= tharaka@fedora"
+        ],
+        "shell": "/bin/bash"
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "dropins": [
+          {
+            "contents": "[Service]\nTTYVTDisallocate=no\n# Override Execstart in main unit\nExecStart=\n# Add new Execstart with `-` prefix to ignore failure\nExecStart=-/usr/sbin/agetty --autologin core --noclear %I $TERM\n",
+            "name": "autologin-core.conf"
+          }
+        ],
+        "name": "serial-getty@ttyS0.service"
+      },
+      {
+        "enabled": true,
+        "name": "docker.service"
+      },
+      {
+        "enabled": true,
+        "name": "containerd.service"
+      },
+      {
+        "contents": "[Service]\nType=oneshot\nExecStart=/usr/bin/false\nRemainAfterExit=yes\n\n[Install]\nWantedBy=multi-user.target\n[Container]\nContainerName=etcd\nImage=quay.io/coreos/etcd:latest\nNetwork=host\nVolume=etcd-data:/etcd-data\nExec=/usr/local/bin/etcd                                \\\n    --name node1 --data-dir /etcd-data                  \\\n    --initial-advertise-peer-urls http://127.0.0.1:2380 \\\n    --listen-peer-urls http://127.0.0.1:2380            \\\n    --advertise-client-urls http://127.0.0.1:2379       \\\n    --listen-client-urls http://127.0.0.1:2379          \\\n    --initial-cluster node1=http://127.0.0.1:2380\n\n  [Install]\n  WantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "failure.service"
+      }
+    ]
+  }
+}
