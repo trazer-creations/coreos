@@ -35,3 +35,24 @@ systemd:
         ExecStart=/usr/bin/systemctl reboot
         [Install]
         WantedBy=multi-user.target
+
+    - name: enable-user-podman-services.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Enable podman.socket and podman-restart.service for core user
+        After=default.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/loginctl enable-linger core
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user daemon-reexec'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user daemon-reload'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman.socket'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman.socket'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman-restart.service'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman-restart.service'
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
