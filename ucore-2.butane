@@ -1,0 +1,78 @@
+variant: fcos
+version: 1.4.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCqJDySF3I+nTrgBVNAnjYwf8taj8NjJcwpQ6mnntQW6mMLQXDbpZ+e6JbDjMeousvZItQwO2oOddV9jZEqfrJPdIjsW1nS4ZYQatkAdru0xVMTp/pM4vxJy1eD6ani6l7isANWo9oWdZBwgXEjOXmzxJFTB/oos06ka5zVUBGuFLGtwlS0D0bwKMhUHQAH4NHjVt5v2u5aWZ7yUkD8sBQ/hRiK2FI34z/xV49ZvBw8Ik2IwVdEDmPKmmAgf0/t8dyCDMBdzxD2AkFK/V1UPqyRM2LleCELYFd0MYykcJP2QMwOLFKYzTA/tJ3weWse/ZbgEdUM3ok53t+z7YdGWjkwPf9pU7frFq46s5Z/wsRBjoMs1g2zGIB0f82PPwnX2K4zYgOzryid5y810QBeYfN5uMvjB7BoMn5ZR14aUQdvp/oOqo3dEEeS25pz+LhDrNz2rJ9rDjusL2sbE+iezx3meOSa1gZv9bTeYSXDZocXDrvQWVEnKCBmbh1IEug5qgU= tharaka@fedora
+      password_hash: $y$j9T$KndhtpxqkHEV95qTo0X2l/$Tv5JQ.DcCVQFFXNuVcwvz8PYg77pemY0HwwHbN8FNC3
+      home_dir: /home/core
+      groups:
+        - wheel
+        - docker
+      shell: /bin/bash
+storage:
+  directories:
+    - path: /etc/ucore-autorebase
+      mode: 0754
+  files:
+    - path: /var/home/core/install-user-tools.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          set -euxo pipefail
+
+          # Install fzf
+          git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf || true
+          ~/.fzf/install --all || true
+
+          # Install starship
+          curl -sS https://starship.rs/install.sh | sh -s -- --yes
+          echo 'eval "$(starship init bash)"' >> ~/.bashrc
+
+          # Enable Cockpit
+          sudo systemctl enable --now cockpit.service || true
+
+          echo "Running install-user-tools.sh on $(date)" >> /var/home/core/install-log.txt
+systemd:
+  units:
+    - name: ucore-unsigned-autorebase.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=uCore autorebase to unsigned OCI and reboot
+        ConditionPathExists=!/etc/ucore-autorebase/unverified
+        ConditionPathExists=!/etc/ucore-autorebase/signed
+        After=network-online.target
+        Wants=network-online.target
+        [Service]
+        Type=oneshot
+        StandardOutput=journal+console
+        ExecStart=/usr/bin/rpm-ostree rebase --bypass-driver ostree-unverified-registry:ghcr.io/ublue-os/ucore-minimal:stable
+        ExecStart=/usr/bin/touch /etc/ucore-autorebase/rebased
+        ExecStart=/usr/bin/systemctl disable ucore-unsigned-autorebase.service
+        ExecStart=/usr/bin/systemctl reboot
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: enable-user-podman-services.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Enable podman.socket and podman-restart.service for core user
+        After=default.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/loginctl enable-linger core
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user daemon-reexec'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user daemon-reload'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman.socket'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman.socket'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman-restart.service'
+        ExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman-restart.service'
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
