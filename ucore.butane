@@ -15,6 +15,24 @@ storage:
   directories:
     - path: /etc/ucore-autorebase
       mode: 0754
+  files:
+    - path: /var/home/core/install-fzf.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+          ~/.fzf/install --all
+
+    - path: /var/home/core/install-starship.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          set -euxo pipefail
+          curl -sS https://starship.rs/install.sh | sh -s -- --yes
+          echo 'eval "$(starship init bash)"' >> ~/.bashrc
 systemd:
   units:
     - name: ucore-unsigned-autorebase.service
@@ -52,6 +70,39 @@ systemd:
         ExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman.socket'
         ExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman-restart.service'
         ExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman-restart.service'
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: install-user-tools.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install fzf and starship for core user
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/runuser -l core -c '/var/home/core/install-fzf.sh'
+        ExecStart=/usr/bin/runuser -l core -c '/var/home/core/install-starship.sh'
+        RemainAfterExit=true
+
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: enable-cockpit.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Enable Cockpit after ucore rebase
+        After=multi-user.target
+        ConditionPathExists=/usr/lib/systemd/system/cockpit.service
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/systemctl enable --now cockpit.service
         RemainAfterExit=true
 
         [Install]
