@@ -25,6 +25,24 @@
         "path": "/etc/ucore-autorebase",
         "mode": 492
       }
+    ],
+    "files": [
+      {
+        "path": "/var/home/core/install-fzf.sh",
+        "contents": {
+          "compression": "",
+          "source": "data:,%23!%2Fbin%2Fbash%0Aset%20-euxo%20pipefail%0Agit%20clone%20--depth%201%20https%3A%2F%2Fgithub.com%2Fjunegunn%2Ffzf.git%20~%2F.fzf%0A~%2F.fzf%2Finstall%20--all%0A"
+        },
+        "mode": 493
+      },
+      {
+        "path": "/var/home/core/install-starship.sh",
+        "contents": {
+          "compression": "",
+          "source": "data:;base64,IyEvYmluL2Jhc2gKc2V0IC1ldXhvIHBpcGVmYWlsCmN1cmwgLXNTIGh0dHBzOi8vc3RhcnNoaXAucnMvaW5zdGFsbC5zaCB8IHNoIC1zIC0tIC0teWVzCmVjaG8gJ2V2YWwgIiQoc3RhcnNoaXAgaW5pdCBiYXNoKSInID4+IH4vLmJhc2hyYwo="
+        },
+        "mode": 493
+      }
     ]
   },
   "systemd": {
@@ -38,6 +56,16 @@
         "contents": "[Unit]\nDescription=Enable podman.socket and podman-restart.service for core user\nAfter=default.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/loginctl enable-linger core\nExecStart=/usr/bin/runuser -l core -c 'systemctl --user daemon-reexec'\nExecStart=/usr/bin/runuser -l core -c 'systemctl --user daemon-reload'\nExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman.socket'\nExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman.socket'\nExecStart=/usr/bin/runuser -l core -c 'systemctl --user enable podman-restart.service'\nExecStart=/usr/bin/runuser -l core -c 'systemctl --user start podman-restart.service'\nRemainAfterExit=true\n\n[Install]\nWantedBy=multi-user.target\n",
         "enabled": true,
         "name": "enable-user-podman-services.service"
+      },
+      {
+        "contents": "[Unit]\nDescription=Install fzf and starship for core user\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/runuser -l core -c '/var/home/core/install-fzf.sh'\nExecStart=/usr/bin/runuser -l core -c '/var/home/core/install-starship.sh'\nRemainAfterExit=true\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "install-user-tools.service"
+      },
+      {
+        "contents": "[Unit]\nDescription=Enable Cockpit after ucore rebase\nAfter=multi-user.target\nConditionPathExists=/usr/lib/systemd/system/cockpit.service\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/systemctl enable --now cockpit.service\nRemainAfterExit=true\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "enable-cockpit.service"
       }
     ]
   }
